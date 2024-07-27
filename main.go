@@ -4,29 +4,55 @@ import (
 	"BackendVoting/dbt"
 	"BackendVoting/types"
 	"database/sql"
+	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
+var db *sql.DB
 var dbUser = "myuser"
 var dbPassword = "mypass"
 var dbName = "votingksh"
 var dbHost = "localhost"
 var frontendURL = "http://localhost:5173"
 
-func getPosts(db *sql.DB) gin.H {
+func getPosts(db *sql.DB) ([]types.Post, error) {
 	var posts []types.Post
-	rows := dbt.QueryDB(db, "SELECT * FROM posts")
+	rows, err := db.Query("SELECT * FROM \"POSTVIEW\"")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
 	for rows.Next() {
 		var post types.Post
-		rows.Scan(&post.ID, &post.Title, &post.Content)
+		err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.ShortContent, &post.Owner, &post.Timestamp, &post.OwnerUsername, &post.TotalVotes, &post.Upvotes, &post.Downvotes)
+		if err != nil {
+			return nil, err
+		}
 		posts = append(posts, post)
 	}
-	return posts
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return posts, nil
+}
+func getPostsHandler(c *gin.Context) {
+	posts, err := getPosts(db)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"posts": posts})
 }
 
 func main() {
 	r := gin.Default()
+
 	config := cors.Config{
 		AllowOrigins:     []string{frontendURL},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -35,7 +61,7 @@ func main() {
 		AllowCredentials: true,
 	}
 	r.Use(cors.New(config))
-	db := dbt.InitDB(dbUser, dbPassword, dbName, dbHost)
+	db = dbt.InitDB(dbUser, dbPassword, dbName, dbHost)
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -43,9 +69,7 @@ func main() {
 		})
 	})
 
-	r.GET("/posts", func(c *gin.Context) {
-		c.JSON(200, GetPosts())
-	})
+	r.GET("/posts", getPostsHandler)
 
 	err := r.Run("0.0.0.0:8080")
 	if err != nil {
