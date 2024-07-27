@@ -1,0 +1,11 @@
+services:
+  db:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: testdb
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypass
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./testdata:/var/lib/postgresql/data
