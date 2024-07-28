@@ -13,6 +13,7 @@ Postgres_SCHEME/testdata
 # Test binary, built with `go test -c`
 *.test
 
+
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
@@ -23,3 +24,10 @@ Postgres_SCHEME/testdata
 go.work
 go.work.sum
 .env
+*.env
+*.env.local
+*.env.development
+*.env.test
+*.env.production
+*.env.*
+**.*.env
