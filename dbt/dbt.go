@@ -30,18 +30,3 @@ func CloseDB(DB *sql.DB) {
 	DB.Close()
 	fmt.Println("Successfully closed the database!")
 }
-
-func QueryDB(DB *sql.DB, query string) *sql.Rows {
-	rows, err := DB.Query(query)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return rows
-}
-
-func ExecDB(DB *sql.DB, query string) {
-	_, err := DB.Exec(query)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
